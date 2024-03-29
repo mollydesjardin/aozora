@@ -37,7 +37,8 @@ def init_metadata():
     """
     Initializes result_metadata{} with header from Aozora CSV.
     From Aozora CSV, reads HTML file URLs and saves metadata for each file
-    as an in-order list of fields corresponding to the header in result_metadata (using local path as key). Filenames are stored in files[].
+    as an in-order list of fields corresponding to the header in
+    result_metadata (using local path as key). Filenames are stored in files[].
     """
 
     with open (sourcecsv, newline='') as csvin:
