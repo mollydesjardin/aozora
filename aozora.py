@@ -17,7 +17,7 @@ import csv
 import re
 import MeCab
 
-ruby_tags = ['rt', 'rp']
+ruby_tags = ('rt', 'rp')
 local_path = 'aozorabunko_html/cards/'
 source_url = 'https://www.aozora.gr.jp'
 out_path = Path.cwd().joinpath('tokenized')
