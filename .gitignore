@@ -1,0 +1,8 @@
+*.*~
+*.pdf
+*.csv
+*.zip
+*.xml
+.idea/
+data/
+__pycache__/
