@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: UTF-8 -*-
 
-"""
-Aozora Corpus Builder (aozora.py)
-This script converts Aozora Bunko HTML files to UTF-8 plain-text,
-word-tokenized versions using MeCab and Beautiful Soup.
-Author: Molly Des Jardin
-License: MIT
+"""Aozora Corpus Builder uses Beautiful Soup and MeCab to create UTF-8,
+plain-text, word-tokenized versions of Aozora Bunko HTML files.
+
+This process removes all ruby glosses and markup tags, and separates metadata
+from contents in output .txt files (except for very old, non-standard cases).
+
 """
 
 from datetime import datetime, timezone
@@ -22,24 +22,20 @@ local_path = 'aozorabunko_html/cards/'
 source_url = 'https://www.aozora.gr.jp'
 out_path = Path.cwd().joinpath('tokenized')
 source_csv = 'list_person_all_extended_utf8.csv'
-
-# Create the tagger to reuse for all texts
-# (explicitly ignore config with -r /dev/null, specify dictionary with -d)
-tagger = MeCab.Tagger('-r ' + os.devnull + ' -d 60a_kindai-bungo -Owakati')
-
-# Dictionary of metadata, one list per row, filled in init_metadata()
-# Keys are filenames in format "[digits]-files-[html_filename].html"
-# The filenames are also stored in list files[] for faster processing
 result_metadata = {}
 files = []
 
+# Create MeCab tagger to reuse for all texts
+tagger = MeCab.Tagger('-r ' + os.devnull + ' -d 60a_kindai-bungo -Owakati')
 
 def init_metadata():
-    """
-    Initializes result_metadata{} with header from Aozora CSV.
-    From Aozora CSV, reads HTML file URLs and saves metadata for each file
-    as an in-order list of fields corresponding to the header in
-    result_metadata (using local path as key). Filenames are stored in files[].
+    """Initialize result_metadata{} and files[] from source_csv
+
+    Key: filename in format "[digits]-files-[html_filename].html"
+    Value: list of metadata items in source_csv column order
+
+    Filenames are stored in duplicate list for faster processing
+
     """
 
     with open(source_csv, newline='') as csvin:
@@ -59,41 +55,52 @@ def init_metadata():
 
 
 def ruby_replace(matchobj):
-    """
-    Find ruby annotation pattern for non-standard files, using matchobj
-    regular expression.
-    Return the first (0th) string extracted from the ruby pattern, which
-    is the inline text (not gloss or punctuation).
+    """Uses ruby pattern to extract and return inline text only.
+
+    Parameters
+    -------
+    matchobj : Match
+
+    Returns
+    -------
+    str
+
     """
 
     return matchobj.string[4:].split('（')[0]
 
 
 def to_plain_text(f):
-    """
-    Removes ruby (annotation and gloss) and HTML markup tags.
-    If successful, returns plain text string of work content.
-    If failure, returns empty string.
+    """Removes markup tags to produce a plain-text version of a work.
+
+    Parameters
+    -------
+    f : Path
+        Aozora HTML file to open
+
+    Returns
+    -------
+    str
+
     """
 
     with open(f, mode='r', encoding='Shift-JIS', errors='ignore') as fin:
         file_text = fin.read()
 
-    # Delete excess <br /> present in older files that don't have <p> tags,
-    # to prevent output from having excessive line-break whitespace.
+    # Remove <br /> to avoid excessive line breaks in output
     file_text = file_text.replace("<br />", "")
 
     soup = bs(file_text, "html5lib").select(".main_text")
 
-    # Default case, use Beautiful Soup parser to remove ruby, return text
+    # Default case: Remove all markup and ruby with HTML5 parser, return text
     if len(soup) == 1:
         for tag in soup[0].find_all(ruby_tags):
             tag.extract()
         return soup[0].text
 
-    # If no "main_text" div found:
-    #   - Use regex match to retain glossed word without ruby or punctuation
-    #   - Use Beautiful Soup parser to return text within <body> tag
+    # Known non-standard files with no "main_text" div:
+    #   1. Remove non-HTML ruby markup with regular expression match
+    #   2. Remove other markup with HTML5 parser, return text in <body>
     elif len(soup) == 0:
         non_ruby = re.sub(r"<!R>.*?（.*?）", ruby_replace, file_text)
         soup = bs(non_ruby, "html5lib").find("body")
@@ -111,29 +118,33 @@ def main():
     init_metadata()
 
     for filename in files:
+        # Convert to local file path
         in_path = Path.cwd().joinpath(local_path + filename.replace('-', '/'))
 
-        # 1. Remove ruby
-        # 2. Get only "main" work text (no HTML tags or metadata)
         if in_path.is_file():
+            # Get work text only (no ruby, markup, or metadata)
             text = to_plain_text(in_path)
 
-        # 3. Tokenize using MeCab & save output txt file
             if text:
+                # Tokenize using MeCab parser and rejoin text into one string
                 text_lines = text.split('\n')
                 parsed_lines = [tagger.parse(line).strip() for line in
                                 text_lines]
                 parsed_full = '\n'.join(parsed_lines).strip()
+
+                # Write results out as .txt file
                 out_filename = 't-' + filename[:-5] + '.txt'
                 with open(out_path.joinpath(out_filename), mode='w',
                           encoding='utf-8') as fout:
                     fout.write(parsed_full)
+
+                # Add tokenized filename to respective metadata row
                 result_metadata[filename].append(out_filename)
                 result_metadata[filename].append(str(datetime.now(
                     timezone.utc)))
 
-    # Save CSV with all original Aozora metadata per each file (row), plus
-    # output filename and processing timestamp as extra columns
+    # Save new metadata CSV with all original Aozora fields, adding columns
+    # for new tokenized filename and processing timestamp
     out_csv = Path.cwd().joinpath('t-list_person_all_extended_utf8.csv')
     with open(out_csv, mode='w', encoding='utf-8') as fout:
         w = csv.writer(fout)
