@@ -12,7 +12,6 @@ from contents in output .txt files (except for very old, non-standard cases).
 import os
 import csv
 import re
-from datetime import datetime, timezone
 from pathlib import Path
 
 from bs4 import BeautifulSoup as bs
@@ -142,13 +141,10 @@ def main():
                           encoding='utf-8') as fout:
                     fout.write(parsed_text)
 
-                # Add tokenized filename to result metadata row
+                # Add tokenized filename (with full local path) to metadata
                 metadata[filename].append(out_filename)
-                metadata[filename].append(str(datetime.now(
-                    timezone.utc)))
 
-    # Save new CSV with all original Aozora metadata, adding columns
-    # for new tokenized filename and processing timestamp
+    # Write out new, work-oriented CSV with added column for tokenized filename
     with open(OUT_CSV, mode='w', encoding='utf-8') as fout:
         w = csv.writer(fout)
         w.writerow(metadata['header'])
