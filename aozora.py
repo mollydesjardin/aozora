@@ -26,7 +26,7 @@ SOURCE_CSV = 'list_person_all_extended_utf8.csv'
 OUT_PATH = Path.cwd().joinpath('tokenized')
 OUT_CSV = 't-list_person_all_extended_utf8.csv'
 
-result_metadata = {}
+metadata = {}
 files = []
 
 # Create MeCab tagger to reuse for all texts
@@ -34,9 +34,9 @@ tagger = MeCab.Tagger('-r ' + os.devnull + ' -d 60a_kindai-bungo -Owakati')
 
 
 def init_metadata():
-    """Initialize result_metadata{} and files[] from SOURCE_CSV
+    """Initialize `metadata` and `files` from SOURCE_CSV
 
-    Key: filename in format "[digits]-files-[html_filename].html"
+    Key: filename in pattern "[digits]-files-[html_filename].html"
     Value: list of metadata items in SOURCE_CSV column order
 
     Filenames are stored in duplicate list for faster processing
@@ -46,9 +46,9 @@ def init_metadata():
     with open(SOURCE_CSV, newline='') as csvin:
         csv_reader = csv.reader(csvin)
 
-        result_metadata['header'] = next(csv_reader)
-        result_metadata['header'].append('Tokenized Filename')
-        result_metadata['header'].append('Time Processed (UTC)')
+        metadata['header'] = next(csv_reader)
+        metadata['header'].append('Tokenized Filename')
+        metadata['header'].append('Time Processed (UTC)')
 
         for row in csv_reader:
             # Only store data for files hosted at Aozora URL
@@ -56,7 +56,7 @@ def init_metadata():
                 file_path = '-'.join(row[50].split('/')[4:])
                 if file_path not in files:
                     files.append(file_path)
-                    result_metadata[file_path] = row
+                    metadata[file_path] = row
 
 
 def ruby_replace(matchobj):
@@ -122,39 +122,38 @@ def main():
         OUT_PATH.mkdir()
     init_metadata()
 
-    for filename in files:
+    for f in files:
         # Translate Aozora CSV filename to local file path
-        in_path = Path.cwd().joinpath(LOCAL_PATH + filename.replace('-', '/'))
+        filename = Path.cwd().joinpath(LOCAL_PATH + f.replace('-', '/'))
 
-        if in_path.is_file():
+        if filename.is_file():
             # Get work text only (no ruby, markup, or metadata)
-            text = to_plain_text(in_path)
+            text = to_plain_text(filename)
 
             if text:
                 # Tokenize using MeCab parser and rejoin text into one string
                 text_lines = text.split('\n')
-                parsed_lines = [tagger.parse(line).strip() for line in
-                                text_lines]
-                parsed_full = '\n'.join(parsed_lines).strip()
+                parsed_text = '\n'.join([tagger.parse(line).strip() for line in
+                                text_lines]).strip()
 
                 # Write results out as .txt file
-                out_filename = 't-' + filename[:-5] + '.txt'
+                out_filename = 't-' + str(filename).replace('html', 'txt')
                 with open(OUT_PATH.joinpath(out_filename), mode='w',
                           encoding='utf-8') as fout:
-                    fout.write(parsed_full)
+                    fout.write(parsed_text)
 
-                # Add tokenized filename to respective metadata row
-                result_metadata[filename].append(out_filename)
-                result_metadata[filename].append(str(datetime.now(
+                # Add tokenized filename to result metadata row
+                metadata[filename].append(out_filename)
+                metadata[filename].append(str(datetime.now(
                     timezone.utc)))
 
     # Save new CSV with all original Aozora metadata, adding columns
     # for new tokenized filename and processing timestamp
     with open(OUT_CSV, mode='w', encoding='utf-8') as fout:
         w = csv.writer(fout)
-        w.writerow(result_metadata['header'])
-        for filename in files:
-            w.writerow(result_metadata[filename])
+        w.writerow(metadata['header'])
+        for f in files:
+            w.writerow(metadata[f])
 
 
 main()
