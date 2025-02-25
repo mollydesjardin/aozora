@@ -137,12 +137,10 @@ def main():
 
                 # Write results out as .txt file
                 out_filename = 't-' + str(filename).replace('html', 'txt')
+                metadata[filename].append(out_filename)
                 with open(OUT_PATH.joinpath(out_filename), mode='w',
                           encoding='utf-8') as fout:
                     fout.write(parsed_text)
-
-                # Add tokenized filename (with full local path) to metadata
-                metadata[filename].append(out_filename)
 
     # Write out new, work-oriented CSV with added column for tokenized filename
     with open(OUT_CSV, mode='w', encoding='utf-8') as fout:
