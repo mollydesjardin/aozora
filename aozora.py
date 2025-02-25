@@ -35,7 +35,7 @@ tagger = MeCab.Tagger('-r ' + os.devnull + ' -d 60a_kindai-bungo -Owakati')
 def init_metadata():
     """Initialize `metadata` and `files` from SOURCE_CSV
 
-    Key: filename in pattern "[digits]-files-[html_filename].html"
+    Key: filename in pattern [digits]-files-[html_filename].html
     Value: list of metadata items in SOURCE_CSV column order
 
     Filenames are stored in duplicate list for faster processing
@@ -47,7 +47,6 @@ def init_metadata():
 
         metadata['header'] = next(csv_reader)
         metadata['header'].append('Tokenized Filename')
-        metadata['header'].append('Time Processed (UTC)')
 
         for row in csv_reader:
             # Only store data for files hosted at Aozora URL
@@ -92,9 +91,9 @@ def to_plain_text(f):
         file_text = fin.read()
 
     # Remove <br /> to avoid excessive line breaks in output
-    file_text = file_text.replace("<br />", "")
+    file_text = file_text.replace('<br />', '')
 
-    soup = bs(file_text, "html5lib").select(".main_text")
+    soup = bs(file_text, 'html5lib').select('.main_text')
 
     # Default case: Remove all markup and ruby with HTML5 parser, return text
     if len(soup) == 1:
@@ -107,7 +106,7 @@ def to_plain_text(f):
     #   2. Remove other markup with HTML5 parser, return text in <body>
     elif len(soup) == 0:
         non_ruby = re.sub(r"<!R>.*?（.*?）", ruby_replace, file_text)
-        soup = bs(non_ruby, "html5lib").find("body")
+        soup = bs(non_ruby, 'html5lib').find('body')
         return soup.text
 
     # Skip processing for other unexpected cases
