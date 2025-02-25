@@ -9,36 +9,40 @@ from contents in output .txt files (except for very old, non-standard cases).
 
 """
 
-from datetime import datetime, timezone
-from bs4 import BeautifulSoup as bs
-from pathlib import Path
 import os
 import csv
 import re
+from datetime import datetime, timezone
+from pathlib import Path
+
+from bs4 import BeautifulSoup as bs
 import MeCab
 
-ruby_tags = ('rt', 'rp')
-local_path = 'aozorabunko_html/cards/'
-source_url = 'https://www.aozora.gr.jp'
-out_path = Path.cwd().joinpath('tokenized')
-source_csv = 'list_person_all_extended_utf8.csv'
+
+RUBY_TAGS = ('rt', 'rp')
+LOCAL_PATH = 'aozorabunko_html/cards/'
+SOURCE_URL = 'https://www.aozora.gr.jp'
+SOURCE_CSV = 'list_person_all_extended_utf8.csv'
+OUT_PATH = Path.cwd().joinpath('tokenized')
+
 result_metadata = {}
 files = []
 
 # Create MeCab tagger to reuse for all texts
 tagger = MeCab.Tagger('-r ' + os.devnull + ' -d 60a_kindai-bungo -Owakati')
 
+
 def init_metadata():
-    """Initialize result_metadata{} and files[] from source_csv
+    """Initialize result_metadata{} and files[] from SOURCE_CSV
 
     Key: filename in format "[digits]-files-[html_filename].html"
-    Value: list of metadata items in source_csv column order
+    Value: list of metadata items in SOURCE_CSV column order
 
     Filenames are stored in duplicate list for faster processing
 
     """
 
-    with open(source_csv, newline='') as csvin:
+    with open(SOURCE_CSV, newline='') as csvin:
         csv_reader = csv.reader(csvin)
 
         result_metadata['header'] = next(csv_reader)
@@ -47,7 +51,7 @@ def init_metadata():
 
         for row in csv_reader:
             # Only store data for files hosted at Aozora URL
-            if source_url in row[50]:
+            if SOURCE_URL in row[50]:
                 file_path = '-'.join(row[50].split('/')[4:])
                 if file_path not in files:
                     files.append(file_path)
@@ -94,7 +98,7 @@ def to_plain_text(f):
 
     # Default case: Remove all markup and ruby with HTML5 parser, return text
     if len(soup) == 1:
-        for tag in soup[0].find_all(ruby_tags):
+        for tag in soup[0].find_all(RUBY_TAGS):
             tag.extract()
         return soup[0].text
 
@@ -113,13 +117,13 @@ def to_plain_text(f):
 
 def main():
 
-    if not (out_path.exists()):
-        out_path.mkdir()
+    if not (OUT_PATH.exists()):
+        OUT_PATH.mkdir()
     init_metadata()
 
     for filename in files:
         # Convert to local file path
-        in_path = Path.cwd().joinpath(local_path + filename.replace('-', '/'))
+        in_path = Path.cwd().joinpath(LOCAL_PATH + filename.replace('-', '/'))
 
         if in_path.is_file():
             # Get work text only (no ruby, markup, or metadata)
@@ -134,7 +138,7 @@ def main():
 
                 # Write results out as .txt file
                 out_filename = 't-' + filename[:-5] + '.txt'
-                with open(out_path.joinpath(out_filename), mode='w',
+                with open(OUT_PATH.joinpath(out_filename), mode='w',
                           encoding='utf-8') as fout:
                     fout.write(parsed_full)
 
