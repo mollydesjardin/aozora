@@ -24,6 +24,7 @@ LOCAL_PATH = 'aozorabunko_html/cards/'
 SOURCE_URL = 'https://www.aozora.gr.jp'
 SOURCE_CSV = 'list_person_all_extended_utf8.csv'
 OUT_PATH = Path.cwd().joinpath('tokenized')
+OUT_CSV = Path.cwd().joinpath('t-list_person_all_extended_utf8.csv')
 
 result_metadata = {}
 files = []
@@ -122,7 +123,7 @@ def main():
     init_metadata()
 
     for filename in files:
-        # Convert to local file path
+        # Translate Aozora CSV filename to local file path
         in_path = Path.cwd().joinpath(LOCAL_PATH + filename.replace('-', '/'))
 
         if in_path.is_file():
@@ -147,10 +148,9 @@ def main():
                 result_metadata[filename].append(str(datetime.now(
                     timezone.utc)))
 
-    # Save new metadata CSV with all original Aozora fields, adding columns
+    # Save new CSV with all original Aozora metadata, adding columns
     # for new tokenized filename and processing timestamp
-    out_csv = Path.cwd().joinpath('t-list_person_all_extended_utf8.csv')
-    with open(out_csv, mode='w', encoding='utf-8') as fout:
+    with open(OUT_CSV, mode='w', encoding='utf-8') as fout:
         w = csv.writer(fout)
         w.writerow(result_metadata['header'])
         for filename in files:
