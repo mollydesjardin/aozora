@@ -24,7 +24,7 @@ LOCAL_PATH = 'aozorabunko_html/cards/'
 SOURCE_URL = 'https://www.aozora.gr.jp'
 SOURCE_CSV = 'list_person_all_extended_utf8.csv'
 OUT_PATH = Path.cwd().joinpath('tokenized')
-OUT_CSV = Path.cwd().joinpath('t-list_person_all_extended_utf8.csv')
+OUT_CSV = 't-list_person_all_extended_utf8.csv'
 
 result_metadata = {}
 files = []
