@@ -140,10 +140,9 @@ After initializing a list of files to process from the metadata CSV, the script 
     - To avoid data loss via overwriting, the filename is made unique by including the subdirectory + filename of the original HTML files. (ex. `t-001257-files-59898_70731.txt`)
 - `t-list_person_all_extended_utf8.csv` enhanced metadata file, saved in the main project directory
     - One row per unique file, containing all original associated metadata from Aozora CSV
-    - Plus two columns added for:
-        - timestamp when processed (timestamp) into txt
-        - unique output txt filename
-    - If the cells for the two additional columns are blank, no output was saved (failed to process)
+    - Added column for tokenized output `.txt` filename
+    - **Note: If the tokenized filename column is blank, no output was saved for that work.** This means the processing 
+      failed for some reason.
 
 
 ## Known issues
