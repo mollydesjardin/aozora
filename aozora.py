@@ -19,6 +19,8 @@ import MeCab
 
 
 RUBY_TAGS = ('rt', 'rp')
+RUBY_START = '<!R>'
+RUBY_END = '（'
 LOCAL_PATH = 'aozorabunko_html/cards/'
 SOURCE_URL = 'https://www.aozora.gr.jp'
 SOURCE_CSV = 'list_person_all_extended_utf8.csv'
@@ -58,19 +60,22 @@ def init_metadata():
 
 
 def ruby_replace(matchobj):
-    """Uses ruby pattern to extract and return inline text only.
+    """Extracts inline text from ruby pattern matches in older Aozora files.
 
     Parameters
     -------
     matchobj : Match
+        Individual ruby pattern regex matches from a source text
 
     Returns
     -------
     str
+        Subset of input text, stripped of leading characters in
+        RUBY_START and everything trailing from RUBY_END (inclusive)
 
     """
 
-    return matchobj.string[4:].split('（')[0]
+    return matchobj.group(0).lstrip(RUBY_START).split(RUBY_END)[0]
 
 
 def to_plain_text(f):
@@ -111,7 +116,7 @@ def to_plain_text(f):
 
     # Skip processing for other unexpected cases
     else:
-        return ""
+        return ''
 
 
 def main():
@@ -131,8 +136,8 @@ def main():
             if text:
                 # Tokenize using MeCab parser and rejoin text into one string
                 text_lines = text.split('\n')
-                parsed_text = '\n'.join([tagger.parse(line).strip() for line in
-                                text_lines]).strip()
+                parsed_text = '\n'.join([tagger.parse(line).strip() for line
+                                         in text_lines]).strip()
 
                 # Write results out as .txt file
                 out_filename = 't-' + str(filename).replace('html', 'txt')
