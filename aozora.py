@@ -19,6 +19,7 @@ import MeCab
 
 
 RUBY_TAGS = ('rt', 'rp')
+RUBY_PATTERN = r"<!R>.*?（.*?）"
 RUBY_START = '<!R>'
 RUBY_END = '（'
 LOCAL_PATH = 'aozorabunko_html/cards/'
@@ -110,7 +111,7 @@ def to_plain_text(f):
     #   1. Remove non-HTML ruby markup with regular expression match
     #   2. Remove other markup with HTML5 parser, return text in <body>
     elif len(soup) == 0:
-        non_ruby = re.sub(r"<!R>.*?（.*?）", ruby_replace, file_text)
+        non_ruby = re.sub(RUBY_PATTERN, ruby_replace, file_text)
         soup = bs(non_ruby, 'html5lib').find('body')
         return soup.text
 
