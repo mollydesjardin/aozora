@@ -79,13 +79,13 @@ def ruby_replace(matchobj):
     return matchobj.group(0).lstrip(RUBY_START).split(RUBY_END)[0]
 
 
-def to_plain_text(f):
+def to_plain_text(html_text):
     """Removes markup tags to produce a plain-text version of a work.
 
     Parameters
     -------
-    f : Path
-        Aozora HTML file to open
+    html_text : str
+        Aozora HTML file contents
 
     Returns
     -------
@@ -93,13 +93,10 @@ def to_plain_text(f):
 
     """
 
-    with open(f, mode='r', encoding='Shift-JIS', errors='ignore') as fin:
-        file_text = fin.read()
-
     # Remove <br /> to avoid excessive line breaks in output
-    file_text = file_text.replace('<br />', '')
+    html_text = html_text.replace('<br />', '')
 
-    soup = bs(file_text, 'html5lib').select('.main_text')
+    soup = bs(html_text, 'html5lib').select('.main_text')
 
     # Default case: Remove all markup and ruby with HTML5 parser, return text
     if len(soup) == 1:
@@ -111,7 +108,7 @@ def to_plain_text(f):
     #   1. Remove non-HTML ruby markup with regular expression match
     #   2. Remove other markup with HTML5 parser, return text in <body>
     elif len(soup) == 0:
-        non_ruby = re.sub(RUBY_PATTERN, ruby_replace, file_text)
+        non_ruby = re.sub(RUBY_PATTERN, ruby_replace, html_text)
         soup = bs(non_ruby, 'html5lib').find('body')
         return soup.text
 
@@ -132,7 +129,10 @@ def main():
 
         if filename.is_file():
             # Get work text only (no ruby, markup, or metadata)
-            text = to_plain_text(filename)
+            with (open(f, mode='r', encoding='Shift-JIS', errors='ignore') as
+                  fin):
+                file_text = fin.read()
+            text = to_plain_text(file_text)
 
             if text:
                 # Tokenize using MeCab parser and rejoin text into one string
