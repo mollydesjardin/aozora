@@ -19,7 +19,7 @@ import MeCab
 
 
 RUBY_TAGS = ('rt', 'rp')
-RUBY_PATTERN = r"<!R>.*?（.*?）"
+RUBY_PATTERN = re.compile('<!R>.*?（.*?）')
 RUBY_START = '<!R>'
 RUBY_END = '（'
 LOCAL_PATH = 'aozorabunko_html/cards/'
