@@ -124,11 +124,11 @@ def main():
         OUT_PATH.mkdir()
     init_metadata()
 
-    for f in files:
+    for filename in files:
         # Translate Aozora CSV filename to local file path
-        filename = Path.cwd().joinpath(LOCAL_PATH + f.replace('-', '/'))
+        f = Path.cwd().joinpath(LOCAL_PATH + filename.replace('-', '/'))
 
-        if filename.is_file():
+        if f.is_file():
             # Get work text only (no ruby, markup, or metadata)
             with (open(f, mode='r', encoding='Shift-JIS', errors='ignore') as
                   fin):
@@ -142,7 +142,7 @@ def main():
                                          in text_lines]).strip()
 
                 # Write results out as .txt file
-                out_filename = 't-' + str(filename).replace('html', 'txt')
+                out_filename = 't-' + filename.replace('html', 'txt')
                 metadata[filename].append(out_filename)
                 with open(OUT_PATH.joinpath(out_filename), mode='w',
                           encoding='utf-8') as fout:
