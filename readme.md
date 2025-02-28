@@ -68,8 +68,9 @@ I recommend using 近代文語UniDic with MeCab for tokenization. It most closel
 with files in it) to the project directory. Make sure the value of `DICT_PATH` at the top of the script 
 matches the name of this folder exactly.
 
-If you receive a `RuntimeError: Failed initializing MeCab`, try using the absolute path to the dictionary folder as 
-DICT_PATH to make sure MeCab is looking in the right place. For example, 
+You may receive a `RuntimeError: Failed initializing MeCab` that complains about the dictionary path not found. To 
+fix this, use the absolute path to the dictionary folder as `DICT_PATH` to make sure MeCab is looking in the right 
+place. For example, 
 `DICT_PATH = '/home/your_username/projects/aozora/60a_kindai-bungo'`.
 
 
