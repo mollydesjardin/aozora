@@ -23,16 +23,14 @@ RUBY_PATTERN = re.compile('<!R>.*?（.*?）')
 RUBY_START = '<!R>'
 RUBY_END = '（'
 LOCAL_PATH = 'aozorabunko_html/cards/'
+DICT_PATH = '60a_kindai-bungo'          # use absolute path if MeCab error
 SOURCE_URL = 'https://www.aozora.gr.jp'
 SOURCE_CSV = 'list_person_all_extended_utf8.csv'
-OUT_PATH = Path.cwd().joinpath('tokenized')
 OUT_CSV = 't-list_person_all_extended_utf8.csv'
+OUT_PATH = Path.cwd().joinpath('tokenized')
 
 metadata = {}
 files = []
-
-# Create MeCab tagger to reuse for all texts
-tagger = MeCab.Tagger('-r ' + os.devnull + ' -d 60a_kindai-bungo -Owakati')
 
 
 def init_metadata():
@@ -119,6 +117,9 @@ def to_plain_text(html_text):
 
 def main():
 
+    # Create MeCab tagger to reuse for all texts
+    tagger = MeCab.Tagger('-r ' + os.devnull + ' -d ' + DICT_PATH + ' -Owakati')
+
     if not (OUT_PATH.exists()):
         OUT_PATH.mkdir()
     init_metadata()
@@ -154,5 +155,5 @@ def main():
         for f in files:
             w.writerow(metadata[f])
 
-
-main()
+if __name__ == '__main__':
+    main()
