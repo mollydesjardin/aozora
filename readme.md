@@ -61,13 +61,16 @@ My approach is also a little different from many other projects that clean up or
 
 _If you prefer untokenized output, just comment out the MeCab setup and tokenization lines of the script._
 
-I recommend using 近代文語UniDic with MeCab for tokenization. It most closely matches the language in Aozora texts (from 100+ years ago) so should produce the best word-splitting results.
+I recommend using 近代文語UniDic with MeCab for tokenization. It most closely matches the language in Aozora texts (from 
+100+ years ago) for better word-splitting results.
 
-[Download](https://clrd.ninjal.ac.jp/unidic/download_all.html#unidic_kindai) and extract the dictionary (a folder with files) in the main project directory, and make sure it's the same as the folder name following the `-d` flag in the tagger setup line of the script:
+[Download](https://clrd.ninjal.ac.jp/unidic/download_all.html#unidic_kindai) and extract the dictionary (just a folder 
+with files in it) to the project directory. Make sure the value of `DICT_PATH` at the top of the script 
+matches the name of this folder exactly.
 
-```
-tagger = MeCab.Tagger('-r ' + os.devnull + ' -d 60a_kindai-bungo -Owakati')
-```
+If you receive a `RuntimeError: Failed initializing MeCab`, try using the absolute path to the dictionary folder as 
+DICT_PATH to make sure MeCab is looking in the right place. For example, 
+`DICT_PATH = '/home/your_username/projects/aozora/60a_kindai-bungo'`.
 
 
 #### Why not configure with mecabrc?
