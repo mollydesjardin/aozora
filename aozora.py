@@ -23,9 +23,10 @@ RUBY_PATTERN = re.compile('<!R>.*?（.*?）')
 RUBY_START = '<!R>'
 RUBY_END = '（'
 LOCAL_PATH = 'aozorabunko_html/cards/'
-DICT_PATH = '60a_kindai-bungo'          # use absolute path if MeCab error
-SOURCE_URL = 'https://www.aozora.gr.jp'
+DICT_PATH = '60a_kindai-bungo'
+SOURCE_URL = 'https://www.aozora.gr.jp/cards'
 SOURCE_CSV = 'list_person_all_extended_utf8.csv'
+SOURCE_PATH = 'XHTML/HTMLファイルURL'
 OUT_CSV = 't-list_person_all_extended_utf8.csv'
 OUT_PATH = Path.cwd().joinpath('tokenized')
 
@@ -48,11 +49,12 @@ def init_metadata():
 
         metadata['header'] = next(csv_reader)
         metadata['header'].append('Tokenized Filename')
+        html_column = metadata['header'].index(SOURCE_PATH)
 
         for row in csv_reader:
             # Only store data for files hosted at Aozora URL
-            if SOURCE_URL in row[50]:
-                file_path = '-'.join(row[50].split('/')[4:])
+            if SOURCE_URL in row[html_column]:
+                file_path = row[html_column].lstrip(SOURCE_URL)
                 if file_path not in files:
                     files.append(file_path)
                     metadata[file_path] = row
@@ -117,16 +119,16 @@ def to_plain_text(html_text):
 
 def main():
 
-    # Create MeCab tagger to reuse for all texts
-    tagger = MeCab.Tagger('-r ' + os.devnull + ' -d ' + DICT_PATH + ' -Owakati')
-
     if not (OUT_PATH.exists()):
         OUT_PATH.mkdir()
     init_metadata()
 
+    # Create MeCab tagger to reuse for all texts
+    tagger = MeCab.Tagger('-r ' + os.devnull + ' -d ' + DICT_PATH + ' -Owakati')
+
     for filename in files:
         # Translate Aozora CSV filename to local file path
-        f = Path.cwd().joinpath(LOCAL_PATH + filename.replace('-', '/'))
+        f = Path.cwd().joinpath(LOCAL_PATH + filename)
 
         if f.is_file():
             # Get work text only (no ruby, markup, or metadata)
@@ -142,7 +144,8 @@ def main():
                                          in text_lines]).strip()
 
                 # Write results out as .txt file
-                out_filename = 't-' + filename.replace('html', 'txt')
+                out_filename = ('t-' + filename.replace('html', 'txt').
+                                replace('/', '-'))
                 metadata[filename].append(out_filename)
                 with open(OUT_PATH.joinpath(out_filename), mode='w',
                           encoding='utf-8') as fout:
