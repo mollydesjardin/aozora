@@ -39,7 +39,7 @@ def init_metadata():
     Returns
     -------
     metadata : dict
-        Key: unique filename from source_path (source_url prefix stripped)
+        Key: unique file ID from source_path (source_url prefix stripped)
         Value: list of metadata items in source_csv column order, per file
     """
 
@@ -200,7 +200,7 @@ def main():
     # Write out new, work-oriented CSV with added column for tokenized filename
     with open(out_csv, mode='w', encoding='utf-8') as fout:
         w = csv.writer(fout)
-        w.writerow(metadata['header'])
+        w.writerow(metadata.pop('header'))
         for f in metadata:
             w.writerow(metadata[f])
 
