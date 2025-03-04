@@ -18,49 +18,97 @@ from bs4 import BeautifulSoup as bs
 import MeCab
 
 
-RUBY_TAGS = ('rt', 'rp')
-RUBY_PATTERN = re.compile('<!R>.*?（.*?）')
-RUBY_START = '<!R>'
-RUBY_END = '（'
-LOCAL_PATH = 'aozorabunko_html/cards/'
-DICT_PATH = '60a_kindai-bungo'
-SOURCE_URL = 'https://www.aozora.gr.jp/cards'
-SOURCE_CSV = 'list_person_all_extended_utf8.csv'
-SOURCE_PATH = 'XHTML/HTMLファイルURL'
-OUT_CSV = 't-list_person_all_extended_utf8.csv'
-OUT_PATH = Path.cwd().joinpath('tokenized')
-
-metadata = {}
-files = []
-
+ruby_pattern = re.compile('<ruby><rb>.*?</rb><rp>.*?</ruby>')
+ruby_pattern_old = re.compile('<!R>.*?（.*?）')
+ruby = {'start': '<ruby><rb>', 'end': '</rb>'}
+ruby_old = {'start': '<!R>', 'end': '（'}
+local_path = 'aozorabunko_html/cards/'
+dict_path = '60a_kindai-bungo'
+source_url = 'https://www.aozora.gr.jp/cards'
+source_csv = 'list_person_all_extended_utf8.csv'
+source_path = 'XHTML/HTMLファイルURL'
+out_csv = 't-list_person_all_extended_utf8.csv'
+out_path = Path.cwd().joinpath('tokenized')
 
 def init_metadata():
-    """Initialize `metadata` and `files` from SOURCE_CSV
+    """Initialize `metadata` and `files` from source_csv
 
     Key: filename in pattern [digits]-files-[html_filename].html
     Value: list of metadata items in SOURCE_CSV column order
 
     Filenames are stored in duplicate list for faster processing
 
+    Returns
+    -------
+    metadata : dict
+
     """
 
-    with open(SOURCE_CSV, newline='') as csvin:
+    metadata = {}
+    files = []
+
+    with open(source_csv, newline='') as csvin:
         csv_reader = csv.reader(csvin)
 
         metadata['header'] = next(csv_reader)
         metadata['header'].append('Tokenized Filename')
-        html_column = metadata['header'].index(SOURCE_PATH)
+        html_column = metadata['header'].index(source_path)
 
         for row in csv_reader:
             # Only store data for files hosted at Aozora URL
-            if SOURCE_URL in row[html_column]:
-                file_path = row[html_column].lstrip(SOURCE_URL)
+            if source_url in row[html_column]:
+                file_path = row[html_column].lstrip(source_url)
                 if file_path not in files:
                     files.append(file_path)
                     metadata[file_path] = row
+    return metadata
+
+
+def strip_ruby(text):
+    """Strips ruby annotations and related markup from Aozora HTML files.
+
+    Parameters
+    -------
+    text : str
+        Text including Aozora HTML and ruby markup
+
+    Returns
+    -------
+    str
+        All input text (including ruby-annotated base phrases retained
+        inline), stripped of ruby-related markup and annotations
+
+    """
+
+    if ruby['start'] in text:
+        return re.sub(ruby_pattern, ruby_replace, text)
+
+    elif ruby_old['start'] in text:
+        return re.sub(ruby_pattern_old, ruby_replace_old, text)
+
+    else:
+        return text
 
 
 def ruby_replace(matchobj):
+    """Extracts inline text from ruby pattern matches in standard Aozora files.
+
+    Parameters
+    -------
+    matchobj : Match
+        Individual ruby pattern regex matches from a source text
+
+    Returns
+    -------
+    str
+        Subset of input text, stripped of leading ruby markup and all
+        trailing markup or annotations after the base non-ruby phrase
+
+    """
+
+    return matchobj.group(0).lstrip(ruby['start']).split(ruby['end'])[0]
+
+def ruby_replace_old(matchobj):
     """Extracts inline text from ruby pattern matches in older Aozora files.
 
     Parameters
@@ -71,12 +119,13 @@ def ruby_replace(matchobj):
     Returns
     -------
     str
-        Subset of input text, stripped of leading characters in
-        RUBY_START and everything trailing from RUBY_END (inclusive)
+        Subset of input text, stripped of leading ruby markup and all
+        trailing markup or annotations after the base non-ruby phrase
 
     """
 
-    return matchobj.group(0).lstrip(RUBY_START).split(RUBY_END)[0]
+    return matchobj.group(0).lstrip(ruby_old['start']).split(ruby_old[
+                                                                 'end'])[0]
 
 
 def to_plain_text(html_text):
@@ -93,49 +142,48 @@ def to_plain_text(html_text):
 
     """
 
-    # Remove <br /> to avoid excessive line breaks in output
+    # Clean up <br /> to avoid excessive line breaks in output
     html_text = html_text.replace('<br />', '')
 
+    # Aozora standard HTML contains exactly ONE div with "main_text" class
+    # (used like an ID), so explicitly test for 1 result and return its
+    # markup-stripped text
     soup = bs(html_text, 'html5lib').select('.main_text')
-
-    # Default case: Remove all markup and ruby with HTML5 parser, return text
     if len(soup) == 1:
-        for tag in soup[0].find_all(RUBY_TAGS):
-            tag.extract()
         return soup[0].text
 
-    # Known non-standard files with no "main_text" div:
-    #   1. Remove non-HTML ruby markup with regular expression match
-    #   2. Remove other markup with HTML5 parser, return text in <body>
+    # For older files, return markup-stripped text from <body>
     elif len(soup) == 0:
-        non_ruby = re.sub(RUBY_PATTERN, ruby_replace, html_text)
-        soup = bs(non_ruby, 'html5lib').find('body')
-        return soup.text
+        soup = bs(html_text, 'html5lib').find('body')
+        if soup:
+            return soup.text
 
-    # Skip processing for other unexpected cases
-    else:
-        return ''
+    # Skip processing for files with unexpected structure
+    return ''
 
 
 def main():
 
-    if not (OUT_PATH.exists()):
-        OUT_PATH.mkdir()
-    init_metadata()
+    if not (out_path.exists()):
+        out_path.mkdir()
+
+    metadata = init_metadata()
 
     # Create MeCab tagger to reuse for all texts
-    tagger = MeCab.Tagger('-r ' + os.devnull + ' -d ' + DICT_PATH + ' -Owakati')
+    tagger = MeCab.Tagger('-r ' + os.devnull + ' -d ' + dict_path + ' -Owakati')
 
-    for filename in files:
-        # Translate Aozora CSV filename to local file path
-        f = Path.cwd().joinpath(LOCAL_PATH + filename)
+    for filename in metadata:
+        # Translate remote Aozora HTML filename to local equivalent
+        f = Path.cwd().joinpath(local_path + filename)
 
         if f.is_file():
-            # Get work text only (no ruby, markup, or metadata)
             with (open(f, mode='r', encoding='Shift-JIS', errors='ignore') as
                   fin):
-                file_text = fin.read()
-            text = to_plain_text(file_text)
+                text = fin.read()
+
+            # Remove ruby, markup, standard-format metadata from work text
+            text = strip_ruby(text)
+            text = to_plain_text(text)
 
             if text:
                 # Tokenize using MeCab parser and rejoin text into one string
@@ -147,15 +195,15 @@ def main():
                 out_filename = ('t-' + filename.replace('html', 'txt').
                                 replace('/', '-'))
                 metadata[filename].append(out_filename)
-                with open(OUT_PATH.joinpath(out_filename), mode='w',
+                with open(out_path.joinpath(out_filename), mode='w',
                           encoding='utf-8') as fout:
                     fout.write(parsed_text)
 
     # Write out new, work-oriented CSV with added column for tokenized filename
-    with open(OUT_CSV, mode='w', encoding='utf-8') as fout:
+    with open(out_csv, mode='w', encoding='utf-8') as fout:
         w = csv.writer(fout)
         w.writerow(metadata['header'])
-        for f in files:
+        for f in metadata:
             w.writerow(metadata[f])
 
 if __name__ == '__main__':
