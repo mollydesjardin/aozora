@@ -12,11 +12,12 @@ from contents in output .txt files (except for very old, non-standard cases).
 import os
 import csv
 import re
+import warnings
 from pathlib import Path
 
 import MeCab
 from bs4 import BeautifulSoup as bs
-
+from bs4 import XMLParsedAsHTMLWarning
 
 ruby_pattern = re.compile('<ruby><rb>.*?</rb><rp>.*?</ruby>')
 ruby_pattern_old = re.compile('<!R>.*?（.*?）')
@@ -45,12 +46,13 @@ def init_metadata():
 
     metadata = {}
 
-    with open(source_csv, newline='') as csvin:
+    with (open(source_csv, newline='') as csvin):
         csv_reader = csv.reader(csvin)
 
         header_row = next(csv_reader)
         html_column = header_row.index(source_path)
-        metadata['header'] = header_row.append('Tokenized Filename')
+        header_row.append('Tokenized Filename')
+        metadata['header'] = header_row
 
         for row in csv_reader:
             # Only store data for files hosted at Aozora URL
@@ -169,6 +171,9 @@ def main():
     # Create MeCab tagger to reuse for all texts
     tagger = MeCab.Tagger('-r ' + os.devnull + ' -d ' + dict_path +
                           ' -Owakati')
+
+    # Suppress Beautiful Soup warnings that don't apply to these files
+    warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
 
     for filename in metadata:
         # Translate remote Aozora HTML filename to local equivalent
