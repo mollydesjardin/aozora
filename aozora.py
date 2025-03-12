@@ -14,6 +14,7 @@ import csv
 import re
 import warnings
 from pathlib import Path
+from typing import Dict, List, Match
 
 import MeCab
 from bs4 import BeautifulSoup as bs
@@ -32,7 +33,7 @@ out_csv = 't-list_person_all_extended_utf8.csv'
 out_path = Path.cwd().joinpath('tokenized')
 
 
-def init_metadata():
+def init_metadata() -> Dict[str, List[str]]:
     """Initialize dictionary with metadata from source_csv
 
     Filenames are stored in duplicate list for faster processing
@@ -63,7 +64,7 @@ def init_metadata():
     return metadata
 
 
-def strip_ruby(text):
+def strip_ruby(text: str) -> str:
     """Strips ruby annotations and related markup from Aozora HTML files.
 
     Parameters
@@ -89,7 +90,7 @@ def strip_ruby(text):
         return text
 
 
-def ruby_replace(matchobj):
+def ruby_replace(matchobj: Match) -> str:
     """Extracts inline text from ruby pattern matches in standard Aozora files.
 
     Parameters
@@ -108,7 +109,7 @@ def ruby_replace(matchobj):
     return matchobj.group(0).lstrip(ruby['start']).split(ruby['end'])[0]
 
 
-def ruby_replace_old(matchobj):
+def ruby_replace_old(matchobj: Match) -> str:
     """Extracts inline text from ruby pattern matches in older Aozora files.
 
     Parameters
@@ -128,7 +129,7 @@ def ruby_replace_old(matchobj):
                                                                  'end'])[0]
 
 
-def to_plain_text(html_text):
+def to_plain_text(html_text: str) -> str:
     """Removes markup tags to produce a plain-text version of a work.
 
     Parameters
@@ -146,8 +147,7 @@ def to_plain_text(html_text):
     html_text = html_text.replace('<br />', '')
 
     # Aozora standard HTML contains exactly ONE div with "main_text" class
-    # (used like an ID), so explicitly test for 1 result and return its
-    # markup-stripped text
+    # (used like an ID), so test for 1 result and return markup-stripped text
     soup = bs(html_text, 'html5lib').select('.main_text')
     if len(soup) == 1:
         return soup[0].text
@@ -166,7 +166,7 @@ def main():
 
     if not (out_path.exists()):
         out_path.mkdir()
-    metadata = init_metadata()
+    metadata: Dict[str, List[str]] = init_metadata()
 
     # Create MeCab tagger to reuse for all texts
     tagger = MeCab.Tagger('-r ' + os.devnull + ' -d ' + dict_path +
