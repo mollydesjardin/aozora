@@ -201,8 +201,7 @@ HTML." You will often encounter this warning with Japanese documents but is usua
 - I don't use the list of files missing `<div class="main_text">` to skip testing for non-standard cases (even if I 
   don't think it's likely those legacy files will be updated now).
     - _Since this is meant as a tutorial example, I wanted to show the initial logic that found them!_
-- I don't try to include ["missing" characters 外字](https://www.w3.
-  org/International/articles/missing-char-glyph/index.en) from source data files in the output, as Unicode or 
+- I don't try to include ["missing" characters 外字](https://www.w3.org/International/articles/missing-char-glyph/index.en) from source data files in the output, as Unicode or 
   otherwise. **Output from this script simply omits both the characters and Aozora-hosted placeholder images.**
     - These characters are only represented by images (not text), because they weren't available for input when the texts were published. Aozora displays the small images when you're viewing works in a web browser, readable for human eyes, and it doesn't appear anything is "missing" until you look in the source files.
     - For example, compare lines 137, 141, 147, and 148 of the tokenized output (on the right) to the browser-rendered Aozora HTML on the left:
