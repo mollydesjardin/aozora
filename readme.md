@@ -86,7 +86,7 @@ matches the name of this folder exactly.
 Did you receive a `RuntimeError: Failed initializing MeCab` that complains about the dictionary path not found? Try 
 providing the absolute path to the dictionary folder to make sure MeCab is looking in the right place.  For example:
 
-`DICT_PATH = '/home/your_username/projects/aozora/60a_kindai-bungo'`.
+`dict_path = '/home/your_username/projects/aozora/60a_kindai-bungo'`.
 
 
 #### Why not configure with mecabrc?
