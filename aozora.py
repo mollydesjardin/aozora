@@ -169,8 +169,7 @@ def main():
     metadata: Dict[str, List[str]] = init_metadata()
 
     # Create MeCab tagger to reuse for all texts
-    tagger = MeCab.Tagger('-r ' + os.devnull + ' -d ' + dict_path +
-                          ' -Owakati')
+    tagger = MeCab.Tagger(f'-r {os.devnull!s} -d {dict_path!s} -Owakati')
 
     # Suppress Beautiful Soup warnings that don't apply to these files
     warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
@@ -195,8 +194,9 @@ def main():
                                          in text_lines]).strip()
 
                 # Write results out as .txt file
-                out_filename = ('t-' + filename.replace('html', 'txt').
-                                replace('/', '-'))
+                out_filename = filename.replace('html', 'txt')
+                out_filename = out_filename.replace('/', '-')
+                out_filename = f't-{out_filename!s}'
                 metadata[filename].append(out_filename)
                 with open(out_path.joinpath(out_filename), mode='w',
                           encoding='utf-8') as fout:
