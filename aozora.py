@@ -26,17 +26,22 @@ ruby = {'start': '<ruby><rb>', 'end': '</rb>'}
 ruby_old = {'start': '<!R>', 'end': '（'}
 local_path = 'aozorabunko_html/cards/'
 dict_path = '60a_kindai-bungo'
-source_url = 'https://www.aozora.gr.jp/cards'
-source_csv = 'list_person_all_extended_utf8.csv'
-source_path = 'XHTML/HTMLファイルURL'
 out_csv = 't-list_person_all_extended_utf8.csv'
 out_path = Path.cwd().joinpath('tokenized')
 
-
-def init_metadata() -> Dict[str, List[str]]:
+def init_metadata(source_url:str="https://www.aozora.gr.jp/cards",
+                  source_csv:str="list_person_all_extended_utf8.csv",
+                  source_path:str="XHTML/HTMLファイルURL") -> Dict[str, List[str]]:
     """Initialize dictionary with metadata from source_csv
 
-    Filenames are stored in duplicate list for faster processing
+    Parameters
+    -------
+    source_url : str, default="https://www.aozora.gr.jp/cards"
+        URL prefix common to Aozora Bunko-hosted HTML files
+    source_csv: str, default="list_person_all_extended_utf8.csv"
+        Local filename of metadata CSV downloaded from Aozora Bunko
+    source_path: str, default="XHTML/HTMLファイルURL"
+        Name of metadata CSV column containing HTML file URLs
 
     Returns
     -------
@@ -64,7 +69,7 @@ def init_metadata() -> Dict[str, List[str]]:
     return metadata
 
 
-def strip_ruby(text: str) -> str:
+def strip_ruby(text: str, ) -> str:
     """Strips ruby annotations and related markup from Aozora HTML files.
 
     Parameters
@@ -121,7 +126,7 @@ def ruby_replace_old(matchobj: Match) -> str:
     -------
     str
         Subset of input text, stripped of leading ruby markup and all
-        trailing markup or annotations after the base non-ruby phout_pathrase
+        trailing markup or annotations after the base non-ruby phrase
 
     """
 
@@ -163,7 +168,6 @@ def to_plain_text(html_text: str) -> str:
 
 
 def main():
-
     if not (out_path.exists()):
         out_path.mkdir()
     metadata: Dict[str, List[str]] = init_metadata()
@@ -176,7 +180,7 @@ def main():
 
     for filename in metadata:
         # Translate remote Aozora HTML filename to local equivalent
-        f = Path.cwd().joinpath(local_path + filename)
+        f = Path.cwd().joinpath(local_path, filename)
 
         if f.is_file():
             with (open(f, mode='r', encoding='Shift-JIS', errors='ignore') as
