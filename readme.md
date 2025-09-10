@@ -29,7 +29,8 @@ for some [common technical issues](#japanese-text-topics) involved in processing
 ## Background
 
 I started working with Aozora as a side project with some colleagues who wanted to create a dataset for analysis. I 
-hope my code and writeup can serve others who are self-orienting to what can seem like a daunting technical area (until you have a toolbox to deal with it).
+hope my code and writeup can serve others who are self-orienting to what can seem like a daunting technical area 
+(until you have a toolbox to deal with it).
 
 Aozora Bunko is a high-quality, freely-available digital archive of modern Japanese documents. It's a popular choice 
 for text analysis for those reasons alone. Some other features include:
@@ -62,11 +63,17 @@ My approach is a little different from many other projects for Aozora data:
 ### Get the data files
 
 1. Clone or download this repo first. Navigate to the main project directory that contains `aozora.py`.
-2. Using git, shallow clone [this mirror of Aozora HTML files](https://github.com/takahashim/aozorabunko_html) (avoids downloading a lot of unused files).
+2. Using git, shallow clone [Aozora Bunko's GitHub repository](https://github.com/aozorabunko/aozorabunko) (avoids 
+   downloading a lot of unused files).
     - _If you don't have or want to install git, just use the clone function from the Github repository webpage._
-    - Example using Linux command line: `git clone --depth 1 'https://github.com/takahashim/aozorabunko_html' && rm -rf aozorabunko_html/.git`
-    - If the mirror isn't available, shallow clone [the official Aozora repository](https://github.com/aozorabunko/aozorabunko) instead, and rename the repo folder to `aozorabunko_html` to match the script. You will only need the `cards` subfolder and can delete the rest.
-3. Download and unzip the complete, UTF-8 metadata CSV 「公開中　作家別作品一覧拡充版：全て(CSV形式、UTF-8、zip圧縮）」 from the [author list page](https://www.aozora.gr.jp/index_pages/person_all.html) at Aozora Bunko.
+    - Example using Linux command line: `git clone --depth 1 'https://github.com/aozorabunko/aozorabunko' && rm -rf 
+    aozorabunko.git`
+3. Unzip the file `index_pages/list_person_all_extended_utf8.zip` to the main project directory.
+   - You should now have the file `list_person_all_extended_utf8.csv` as shown in Step 1 [#running-the-script](here).
+   - This file is the same as the one available as `「公開中　作家別作品一覧拡充版：全て(CSV形式、UTF-8、zip圧縮）」` on the Aozora Bunko 
+     website's [author list page](https://www.aozora.gr.jp/index_pages/person_all.html). 
+4. The script will look for source files in `aozorabunko/cards/`. The other files and folders in the `aozorabunko` 
+   directory won't be used, so you can delete them at this point.
 
 
 ### Set up MeCab and dictionary
@@ -84,7 +91,7 @@ matches the name of this folder exactly.
 #### Troubleshooting
 
 Did you receive a `RuntimeError: Failed initializing MeCab` that complains about the dictionary path not found? Try 
-providing the absolute path to the dictionary folder to make sure MeCab is looking in the right place.  For example:
+providing the absolute path to the dictionary folder to make sure MeCab is looking in the right place. For example:
 
 `dict_path = '/home/your_username/projects/aozora/60a_kindai-bungo'`.
 
@@ -106,7 +113,7 @@ certain it's using the dictionary I intended!) and saved me a lot of frustration
 ```
 .
 ├── 60a_kindai-bungo/
-├── aozorabunko_html/
+├── aozorabunko/
 │   ├── cards/
 │   │   ├── 000005/
 │   │   │   └── files/
@@ -213,7 +220,7 @@ HTML." You will often encounter this warning with Japanese documents but is usua
 
 ### About the Aozora metadata CSV
 
-- The "linking field" to connect Aozora URLs and your local files is in `XHTML/HTMLファイルURL`, by substituting `https://www.aozora.gr.jp/` with `aozorabunko_html/cards/`.
+- The "linking field" to connect Aozora URLs and your local files is in `XHTML/HTMLファイルURL`, by substituting `https://www.aozora.gr.jp/` with `aozorabunko/cards/`.
 - The Aozora CSV is oriented by author, not work (作品). As a result it contains duplicate rows from the perspective of individual works.
     - For example: Work ID (作品ID) 59898 has two corresponding rows, because there is both an author (Washington Irving) and a translator (Yoshida Kinetarō). The CSV considers them multiple author entires, so they each get a row with the same work listed -- even though those two rows are identical.
     - By contrast, this script is work-oriented. **The final output CSV contains metadata about each work processed, one per row and no duplicates.** It's saved separately without overwriting the Aozora-provided CSV.
